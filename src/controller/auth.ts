@@ -27,8 +27,12 @@ export default class AuthController {
       throw new ErrorException('邮箱未注册')
       //} else if (await argon2.verify(user.password, ctx.request.body.password)) {
     } else if (user.password === String(ctx.request.body.password)) {
+      const token = jwt.sign({ id: user.id }, config.jwtSecret)
       ctx.status = 200
-      ctx.body = { token: jwt.sign({ id: user.id }, config.jwtSecret) }
+      ctx.cookies.set('token', token, {
+        httpOnly: true,
+      })
+      ctx.body = { token }
     } else {
       throw new ErrorException('密码错误')
     }
