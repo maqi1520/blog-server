@@ -1,7 +1,6 @@
 import { BaseContext } from 'koa'
 import { getManager, Repository } from 'typeorm'
 import { validate, ValidationError } from 'class-validator'
-import _ from 'lodash'
 import {
   request,
   summary,

@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
 import { Length, IsEmail } from 'class-validator'
+import { Article } from './article'
 
 @Entity()
 export class User {
@@ -25,6 +26,9 @@ export class User {
   })
   @Length(6, 20)
   password: string
+
+  @OneToMany((type) => Article, (article) => article.user)
+  articles: Article[]
 }
 
 export const userSchema = {

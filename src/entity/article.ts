@@ -3,9 +3,11 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToMany,
+  ManyToOne,
   JoinTable,
 } from 'typeorm'
 import { IsNotEmpty } from 'class-validator'
+import { User } from './user'
 import { Category, CategorySchema } from './category'
 import moment from 'moment'
 
@@ -38,6 +40,12 @@ export class Article {
   })
   @JoinTable()
   categories: Category[]
+
+  @ManyToOne((type) => User, (user) => user.articles)
+  user: User
+
+  @Column('int', { nullable: true })
+  userId: number
 
   @Column({
     default: moment().format('YYYY-MM-DD HH:mm'),

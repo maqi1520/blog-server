@@ -1,5 +1,5 @@
 import { BaseContext } from 'koa'
-import { getManager, Repository } from 'typeorm'
+import { getManager, Repository, FindManyOptions } from 'typeorm'
 import { validate, ValidationError } from 'class-validator'
 import _ from 'lodash'
 import {
@@ -12,6 +12,7 @@ import {
   query,
   prefix,
 } from 'koa-swagger-decorator'
+import { User } from '../entity/user'
 import { Article, ArticleSchema } from '../entity/article'
 import { Category } from '../entity/category'
 import { ErrorException } from '../exceptions'
@@ -31,13 +32,12 @@ export default class ArticleController {
     pageSize: { type: 'number', default: 20, description: 'pageSize' },
   })
   public static async getArticles(ctx: BaseContext): Promise<void> {
-    console.log(ctx.state.user)
     const { pageSize = 20, pageNum = 1 } = ctx.request.query
     const articleRepository: Repository<Article> = getManager().getRepository(
       Article
     )
 
-    const [data, total] = await articleRepository.findAndCount({
+    const options: FindManyOptions<Article> = {
       relations: ['categories'],
       order: {
         createdAt: -1,
@@ -45,7 +45,9 @@ export default class ArticleController {
       },
       skip: (pageNum - 1) * pageSize,
       take: pageSize,
-    })
+    }
+
+    const [data, total] = await articleRepository.findAndCount(options)
 
     ctx.status = 200
     ctx.body = { data, total }
@@ -92,7 +94,10 @@ export default class ArticleController {
     )
 
     // build up entity article to be saved
+    const currentUser: User = new User()
+    currentUser.id = ctx.state.user.id
     const articleToBeSaved: Article = new Article()
+    articleToBeSaved.user = currentUser
     Object.keys(ctx.request.body).forEach((key) => {
       if (key === 'title' || key === 'content' || key === 'summary') {
         articleToBeSaved[key] = ctx.request.body[key]
@@ -188,11 +193,19 @@ export default class ArticleController {
     // find the article by specified id
     const articleToRemove:
       | Article
-      | undefined = await articleRepository.findOne(+ctx.params.id || 0)
+      | undefined = await articleRepository.findOne(+ctx.params.id || 0, {
+      relations: ['user'],
+    })
+    console.log(articleToRemove)
     if (!articleToRemove) {
       // return a BAD REQUEST status code and error message
       ctx.status = 400
       ctx.body = "The article you are trying to delete doesn't exist in the db"
+    } else if (ctx.state.user.id !== articleToRemove.user.id) {
+      // check user's token id and user id are the same
+      // if not, return a FORBIDDEN status code and error message
+      ctx.status = 403
+      ctx.body = 'only be deleted by himself'
     } else {
       // the article is there so can be removed
       await articleRepository.remove(articleToRemove)
