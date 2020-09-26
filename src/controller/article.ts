@@ -73,6 +73,8 @@ export default class ArticleController {
     )
 
     if (article) {
+      article['readedCount'] = article['readedCount'] + 1
+      await articleRepository.save(article)
       // return OK status code and loaded article object
       ctx.status = 200
       ctx.body = article
@@ -152,7 +154,13 @@ export default class ArticleController {
       )
     }
     Object.keys(ctx.request.body).forEach((key) => {
-      if (key === 'title' || key === 'content' || key === 'summary') {
+      if ('content' === key) {
+        articleToBeUpdated[key] = ctx.request.body[key]
+      }
+      if ('title' === key) {
+        articleToBeUpdated[key] = ctx.request.body[key]
+      }
+      if ('readedCount' === key) {
         articleToBeUpdated[key] = ctx.request.body[key]
       }
       if (key === 'categories') {
