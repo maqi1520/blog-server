@@ -18,9 +18,9 @@
     "node": "12.x.x",
     "npm": "6.x.x"
   },
-  "author": "Javier Aviles",
+  "author": "maqi1520",
   "license": "MIT",
-  "homepage": "https://github.com/javieraviles/node-typescript-koa-rest#readme",
+  "homepage": "https://github.com/maqi1520/blog-server#readme",
   "keywords": [
     "typescript",
     "koa",
@@ -37,7 +37,7 @@
     "cors",
     "github actions"
   ],
-  "repository": "github:javieraviles/node-typescript-koa-rest",
+  "repository": "git@github.com:maqi1520/blog-server.git",
   "devDependencies": {
     "@types/cron": "^1.7.2",
     "@types/jsonwebtoken": "^8.5.0",
