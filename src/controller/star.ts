@@ -19,7 +19,7 @@ import { ErrorException } from '../exceptions'
   400: { description: 'bad request' },
   401: { description: 'unauthorized, missing/wrong jwt token' },
 })
-@tagsAll(['Article'])
+@tagsAll(['star'])
 @prefix('/api')
 export default class StarController {
   @request('get', '/star')

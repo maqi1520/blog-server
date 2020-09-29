@@ -1,4 +1,4 @@
-import { user, article, auth, star } from './controller'
+import { user, article, auth, star, category } from './controller'
 import Router from '@koa/router'
 
 const protectedRouter = new Router()
@@ -27,5 +27,10 @@ protectedRouter.get('/star/:id', star.get)
 protectedRouter.post('/star', star.create)
 protectedRouter.put('/star/:id', star.update)
 protectedRouter.delete('/star/:id', star.remove)
+
+// star ROUTES
+protectedRouter.get('/category', category.query)
+protectedRouter.get('/category/:id', category.get)
+protectedRouter.put('/category/:id', category.update)
 
 export { protectedRouter }

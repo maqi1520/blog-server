@@ -157,6 +157,9 @@ export default class ArticleController {
       if ('content' === key) {
         articleToBeUpdated[key] = ctx.request.body[key]
       }
+      if ('summary' === key) {
+        articleToBeUpdated[key] = ctx.request.body[key]
+      }
       if ('title' === key) {
         articleToBeUpdated[key] = ctx.request.body[key]
       }
