@@ -26,6 +26,7 @@ export class Article {
   summary: string
 
   @Column({
+    select: false,
     type: 'text',
   })
   content: string

@@ -65,12 +65,12 @@ export default class ArticleController {
     )
 
     // load article by id
-    const article: Article | undefined = await articleRepository.findOne(
-      +ctx.params.id || 0,
-      {
-        relations: ['categories'],
-      }
-    )
+    const article: Article | undefined = await articleRepository
+      .createQueryBuilder('article')
+      .where({ id: +ctx.params.id || 0 })
+      .addSelect('article.content')
+      .leftJoinAndSelect('article.categories', 'category')
+      .getOne()
 
     if (article) {
       article['readedCount'] = article['readedCount'] + 1
