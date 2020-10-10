@@ -7,6 +7,7 @@ import { User, userSchema } from '../entity/user'
 
 import { config } from '../config'
 import { UnauthorizedException, ErrorException } from '../exceptions'
+import { validate, ValidationError } from 'class-validator'
 
 @tagsAll(['Auth'])
 @prefix('/api')
@@ -51,16 +52,19 @@ export default class AuthController {
 
     if (user) {
       throw new ErrorException('该邮箱已经注册')
-    } else {
-      const newUser = new User()
-      newUser.name = ctx.request.body.name
-      newUser.email = ctx.request.body.email
-      //newUser.password = await argon2.hash(ctx.request.body.password);
-      newUser.password = String(ctx.request.body.password)
+    }
 
+    const newUser = userRepository.create(ctx.request.body)
+
+    // validate user entity
+    const errors: ValidationError[] = await validate(newUser)
+    if (errors.length > 0) {
+      // return BAD REQUEST status code and errors array
+      ctx.status = 400
+      ctx.body = errors
+    } else {
       // 保存到数据库
       const user = await userRepository.save(newUser)
-
       ctx.status = 201
       ctx.body = { ...user, password: undefined }
     }
@@ -69,7 +73,6 @@ export default class AuthController {
   @request('post', '/auth/me')
   @summary('get current user Info')
   public static async me(ctx: BaseContext) {
-    console.log(ctx.state.user)
     if (ctx.state.user && ctx.state.user.id) {
       const userRepository: Repository<User> = getManager().getRepository(User)
 

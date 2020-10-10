@@ -88,11 +88,7 @@ export default class CategoryController {
         "The id you are trying to update doesn't exist in the db"
       )
     }
-    Object.keys(ctx.request.body).forEach((key) => {
-      if (key === 'name') {
-        toBeUpdated[key] = ctx.request.body[key]
-      }
-    })
+    repository.merge(toBeUpdated, ctx.request.body)
 
     const errors: ValidationError[] = await validate(toBeUpdated) // errors is an array of validation errors
 

@@ -66,10 +66,14 @@ export default class UserController {
     // get a user repository to perform operations with user
     const userRepository: Repository<User> = getManager().getRepository(User)
 
+    if (await userRepository.findOne({ email: ctx.request.body.email })) {
+      // return BAD REQUEST status code and email already exists error
+      ctx.status = 400
+      ctx.body = 'The specified e-mail address already exists'
+    }
+
     // build up entity user to be saved
-    const userToBeSaved: User = new User()
-    userToBeSaved.name = ctx.request.body.name
-    userToBeSaved.email = ctx.request.body.email
+    const userToBeSaved = userRepository.create(ctx.request.body)
 
     // validate user entity
     const errors: ValidationError[] = await validate(userToBeSaved) // errors is an array of validation errors
@@ -78,10 +82,6 @@ export default class UserController {
       // return BAD REQUEST status code and errors array
       ctx.status = 400
       ctx.body = errors
-    } else if (await userRepository.findOne({ email: userToBeSaved.email })) {
-      // return BAD REQUEST status code and email already exists error
-      ctx.status = 400
-      ctx.body = 'The specified e-mail address already exists'
     } else {
       // save the user contained in the POST body
       const user = await userRepository.save(userToBeSaved)
@@ -101,12 +101,20 @@ export default class UserController {
     // get a user repository to perform operations with user
     const userRepository: Repository<User> = getManager().getRepository(User)
 
+    const id = +ctx.params.id || 0
+
+    const userToBeUpdated = await userRepository.findOne(id)
+
+    if (!userToBeUpdated) {
+      // check if a user with the specified id exists
+      // return a BAD REQUEST status code and error message
+      ctx.status = 400
+      ctx.body = "The user you are trying to update doesn't exist in the db"
+    }
+
     // update the user by specified id
     // build up entity user to be updated
-    const userToBeUpdated: User = new User()
-    userToBeUpdated.id = +ctx.params.id || 0 // will always have a number, this will avoid errors
-    userToBeUpdated.name = ctx.request.body.name
-    userToBeUpdated.email = ctx.request.body.email
+    userRepository.merge(userToBeUpdated, ctx.requet.body)
 
     // validate user entity
     const errors: ValidationError[] = await validate(userToBeUpdated) // errors is an array of validation errors
@@ -115,11 +123,6 @@ export default class UserController {
       // return BAD REQUEST status code and errors array
       ctx.status = 400
       ctx.body = errors
-    } else if (!(await userRepository.findOne(userToBeUpdated.id))) {
-      // check if a user with the specified id exists
-      // return a BAD REQUEST status code and error message
-      ctx.status = 400
-      ctx.body = "The user you are trying to update doesn't exist in the db"
     } else if (
       await userRepository.findOne({
         id: Not(Equal(userToBeUpdated.id)),
@@ -151,11 +154,13 @@ export default class UserController {
     const userToRemove: User | undefined = await userRepository.findOne(
       +ctx.params.id || 0
     )
+    console.log(userToRemove)
+    console.log(ctx.state.user.id)
     if (!userToRemove) {
       // return a BAD REQUEST status code and error message
       ctx.status = 400
       ctx.body = "The user you are trying to delete doesn't exist in the db"
-    } else if (ctx.state.user.email !== userToRemove.email) {
+    } else if (ctx.state.user.id !== userToRemove.id) {
       // check user's token id and user id are the same
       // if not, return a FORBIDDEN status code and error message
       ctx.status = 403

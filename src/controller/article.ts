@@ -1,7 +1,12 @@
 import { BaseContext } from 'koa'
-import { getManager, Repository, FindManyOptions } from 'typeorm'
+import {
+  getManager,
+  Repository,
+  FindManyOptions,
+  FindConditions,
+  Like,
+} from 'typeorm'
 import { validate, ValidationError } from 'class-validator'
-import _ from 'lodash'
 import {
   request,
   summary,
@@ -14,7 +19,6 @@ import {
 } from 'koa-swagger-decorator'
 import { User } from '../entity/user'
 import { Article, ArticleSchema } from '../entity/article'
-import { Category } from '../entity/category'
 import { ErrorException } from '../exceptions'
 
 @responsesAll({
@@ -32,12 +36,18 @@ export default class ArticleController {
     pageSize: { type: 'number', default: 20, description: 'pageSize' },
   })
   public static async getArticles(ctx: BaseContext): Promise<void> {
-    const { pageSize = 20, pageNum = 1 } = ctx.request.query
+    const { pageSize = 20, pageNum = 1, title, tag } = ctx.request.query
     const articleRepository: Repository<Article> = getManager().getRepository(
       Article
     )
 
+    const where: FindConditions<Article> | FindConditions<Article>[] = {}
+    if (title) {
+      where.title = Like(`%${title}%`)
+    }
+
     const options: FindManyOptions<Article> = {
+      where,
       relations: ['categories'],
       order: {
         createdAt: -1,
@@ -98,21 +108,7 @@ export default class ArticleController {
     // build up entity article to be saved
     const currentUser: User = new User()
     currentUser.id = ctx.state.user.id
-    const articleToBeSaved: Article = new Article()
-    articleToBeSaved.user = currentUser
-    Object.keys(ctx.request.body).forEach((key) => {
-      if (key === 'title' || key === 'content' || key === 'summary') {
-        articleToBeSaved[key] = ctx.request.body[key]
-      }
-      if (key === 'categories') {
-        articleToBeSaved[key] = _.map(ctx.request.body[key], (item) => {
-          const category = new Category()
-          category.id = item.id
-          category.name = item.name
-          return category
-        })
-      }
-    })
+    const articleToBeSaved = articleRepository.create(ctx.request.body)
 
     // validate article entity
     const errors: ValidationError[] = await validate(articleToBeSaved) // errors is an array of validation errors
@@ -153,28 +149,7 @@ export default class ArticleController {
         "The article you are trying to update doesn't exist in the db"
       )
     }
-    Object.keys(ctx.request.body).forEach((key) => {
-      if ('content' === key) {
-        articleToBeUpdated[key] = ctx.request.body[key]
-      }
-      if ('summary' === key) {
-        articleToBeUpdated[key] = ctx.request.body[key]
-      }
-      if ('title' === key) {
-        articleToBeUpdated[key] = ctx.request.body[key]
-      }
-      if ('readedCount' === key) {
-        articleToBeUpdated[key] = ctx.request.body[key]
-      }
-      if (key === 'categories') {
-        articleToBeUpdated[key] = _.map(ctx.request.body[key], (item) => {
-          const category = new Category()
-          category.id = item.id
-          category.name = item.name
-          return category
-        })
-      }
-    })
+    articleRepository.merge(articleToBeUpdated, ctx.request.body)
 
     // validate article entity
     const errors: ValidationError[] = await validate(articleToBeUpdated) // errors is an array of validation errors

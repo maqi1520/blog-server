@@ -67,12 +67,7 @@ export default class StarController {
   public static async create(ctx: BaseContext): Promise<void> {
     const repository: Repository<Star> = getManager().getRepository(Star)
 
-    const starToBeSaved: Star = new Star()
-    Object.keys(ctx.request.body).forEach((key) => {
-      if (key === 'title' || key === 'url') {
-        starToBeSaved[key] = ctx.request.body[key]
-      }
-    })
+    const starToBeSaved = repository.create(ctx.request.body)
 
     const errors: ValidationError[] = await validate(starToBeSaved) // errors is an array of validation errors
 
@@ -106,11 +101,7 @@ export default class StarController {
         "The id you are trying to update doesn't exist in the db"
       )
     }
-    Object.keys(ctx.request.body).forEach((key) => {
-      if (key === 'title' || key === 'url') {
-        starToBeUpdated[key] = ctx.request.body[key]
-      }
-    })
+    repository.merge(starToBeUpdated, ctx.request.body)
 
     const errors: ValidationError[] = await validate(starToBeUpdated) // errors is an array of validation errors
 
