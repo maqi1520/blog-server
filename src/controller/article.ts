@@ -41,23 +41,42 @@ export default class ArticleController {
       Article
     )
 
-    const where: FindConditions<Article> | FindConditions<Article>[] = {}
+    // const where: FindConditions<Article> | FindConditions<Article>[] = {}
+    // if (title) {
+    //   where.title = Like(`%${title}%`)
+    // }
+
+    // const options: FindManyOptions<Article> = {
+    //   where,
+    //   relations: ['categories'],
+    //   order: {
+    //     createdAt: -1,
+    //     updatedAt: -1,
+    //   },
+    //   skip: (pageNum - 1) * pageSize,
+    //   take: pageSize,
+    // }
+
+    // const [data, total] = await articleRepository.findAndCount(options)
+
+    const sql = articleRepository
+      .createQueryBuilder('article')
+      .innerJoinAndSelect('article.categories', 'category')
     if (title) {
-      where.title = Like(`%${title}%`)
+      sql.where('article.title like :title ', { title: `%${title}%` })
     }
-
-    const options: FindManyOptions<Article> = {
-      where,
-      relations: ['categories'],
-      order: {
-        createdAt: -1,
-        updatedAt: -1,
-      },
-      skip: (pageNum - 1) * pageSize,
-      take: pageSize,
+    if (tag) {
+      sql.andWhere('category.name like :tag ', { tag: `%${tag}%` })
     }
+    sql
+      .orderBy({
+        'article.createdAt': 'DESC',
+        'article.updatedAt': 'DESC',
+      })
+      .skip((pageNum - 1) * pageSize)
+      .take(pageSize)
 
-    const [data, total] = await articleRepository.findAndCount(options)
+    const [data, total] = await sql.getManyAndCount()
 
     ctx.status = 200
     ctx.body = { data, total }
