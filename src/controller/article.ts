@@ -125,9 +125,12 @@ export default class ArticleController {
     )
 
     // build up entity article to be saved
-    const currentUser: User = new User()
-    currentUser.id = ctx.state.user.id
-    const articleToBeSaved = articleRepository.create(ctx.request.body)
+    // const currentUser: User = new User()
+    // currentUser.id = ctx.state.user.id
+    const articleToBeSaved = articleRepository.create({
+      ...ctx.request.body,
+      user: ctx.state.user,
+    })
 
     // validate article entity
     const errors: ValidationError[] = await validate(articleToBeSaved) // errors is an array of validation errors
