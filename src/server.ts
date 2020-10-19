@@ -17,6 +17,7 @@ import { cron } from './cron'
 // note that its not active database connection
 // TypeORM creates you connection pull to uses connections from pull on your requests
 createConnection({
+  charset: 'utf8mb4_unicode_ci',
   type: 'mysql',
   host: config.dbHost,
   port: 3306,

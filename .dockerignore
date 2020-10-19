@@ -6,6 +6,7 @@ dist
 integrationtests
 loadtests
 .example.env
+.env
 docker-compose.yml
 LICENSE
 README.md
