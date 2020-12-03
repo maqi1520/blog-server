@@ -1,11 +1,5 @@
 import { BaseContext } from 'koa'
-import {
-  getManager,
-  Repository,
-  FindManyOptions,
-  FindConditions,
-  Like,
-} from 'typeorm'
+import { getManager, Repository } from 'typeorm'
 import { validate, ValidationError } from 'class-validator'
 import {
   request,
@@ -17,7 +11,6 @@ import {
   query,
   prefix,
 } from 'koa-swagger-decorator'
-import { User } from '../entity/user'
 import { Article, ArticleSchema } from '../entity/article'
 import { ErrorException } from '../exceptions'
 
@@ -32,42 +25,38 @@ export default class ArticleController {
   @request('get', '/articles')
   @summary('Find all articles')
   @query({
+    published: { type: 'boolean', description: 'published' },
     pageNum: { type: 'number', default: 1, description: 'pageNum' },
     pageSize: { type: 'number', default: 20, description: 'pageSize' },
   })
   public static async getArticles(ctx: BaseContext): Promise<void> {
-    const { pageSize = 20, pageNum = 1, title, tag } = ctx.request.query
+    const {
+      pageSize = 20,
+      pageNum = 1,
+      title,
+      tag,
+      published,
+      userId,
+    } = ctx.request.query
     const articleRepository: Repository<Article> = getManager().getRepository(
       Article
     )
-
-    // const where: FindConditions<Article> | FindConditions<Article>[] = {}
-    // if (title) {
-    //   where.title = Like(`%${title}%`)
-    // }
-
-    // const options: FindManyOptions<Article> = {
-    //   where,
-    //   relations: ['categories'],
-    //   order: {
-    //     createdAt: -1,
-    //     updatedAt: -1,
-    //   },
-    //   skip: (pageNum - 1) * pageSize,
-    //   take: pageSize,
-    // }
-
-    // const [data, total] = await articleRepository.findAndCount(options)
-
     const sql = articleRepository
       .createQueryBuilder('article')
       .innerJoinAndSelect('article.categories', 'category')
     if (title) {
       sql.where('article.title like :title ', { title: `%${title}%` })
     }
+    if (published === 'true') {
+      sql.andWhere('article.published = :published ', { published: true })
+    }
+    if (userId) {
+      sql.andWhere('article.userId = :userId ', { userId })
+    }
     if (tag) {
       sql.andWhere('category.name like :tag ', { tag: `%${tag}%` })
     }
+
     sql
       .orderBy({
         'article.createdAt': 'DESC',
@@ -204,7 +193,6 @@ export default class ArticleController {
       | undefined = await articleRepository.findOne(+ctx.params.id || 0, {
       relations: ['user'],
     })
-    console.log(articleToRemove)
     if (!articleToRemove) {
       // return a BAD REQUEST status code and error message
       ctx.status = 400

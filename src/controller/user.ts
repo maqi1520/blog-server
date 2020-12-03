@@ -154,8 +154,6 @@ export default class UserController {
     const userToRemove: User | undefined = await userRepository.findOne(
       +ctx.params.id || 0
     )
-    console.log(userToRemove)
-    console.log(ctx.state.user.id)
     if (!userToRemove) {
       // return a BAD REQUEST status code and error message
       ctx.status = 400

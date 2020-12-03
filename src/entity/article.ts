@@ -5,9 +5,11 @@ import {
   ManyToMany,
   ManyToOne,
   JoinTable,
+  OneToMany,
 } from 'typeorm'
 import { IsNotEmpty } from 'class-validator'
 import { User } from './user'
+import { Comment } from './comment'
 import { Category, CategorySchema } from './category'
 import moment from 'moment'
 
@@ -36,6 +38,11 @@ export class Article {
   })
   readedCount: number
 
+  @Column({
+    default: false,
+  })
+  published: boolean
+
   @ManyToMany((type) => Category, {
     cascade: true,
   })
@@ -44,6 +51,9 @@ export class Article {
 
   @ManyToOne((type) => User, (user) => user.articles)
   user: User
+
+  @OneToMany((type) => Comment, (comment) => comment.article)
+  comment: Comment
 
   @Column('int', { nullable: true })
   userId: number
