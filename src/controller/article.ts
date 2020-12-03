@@ -43,7 +43,7 @@ export default class ArticleController {
     )
     const sql = articleRepository
       .createQueryBuilder('article')
-      .innerJoinAndSelect('article.categories', 'category')
+      .leftJoinAndSelect('article.categories', 'category')
     if (title) {
       sql.where('article.title like :title ', { title: `%${title}%` })
     }
