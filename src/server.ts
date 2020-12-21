@@ -26,7 +26,7 @@ createConnection({
   database: config.dbDatabase,
   synchronize: true,
   entities: config.dbEntitiesPath,
-  logging: true,
+  logging: process.env.NODE_ENV == 'development',
 })
   .then(async () => {
     const app = new Koa()
